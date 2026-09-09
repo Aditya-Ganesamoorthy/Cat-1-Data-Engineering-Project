@@ -1,0 +1,36 @@
+name: pipeline-ci
+
+on:
+  push:
+    branches: [main, develop, "feature/**"]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  test-data-pipeline:
+    name: Unit and mock tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout pipeline code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-dev.txt
+
+      - name: Run transformation and pipeline tests
+        run: |
+          pytest tests -v --cov=pipeline --cov=database --cov-report=term-missing
+
+      - name: Validate pipeline-as-code config
+        run: |
+          python -c "import yaml; yaml.safe_load(open('configs/pipeline.yaml', encoding='utf-8'))"
+          test -f airflow/docker-compose.yml
+          test -f airflow/dags/movie_pipeline_dag.py

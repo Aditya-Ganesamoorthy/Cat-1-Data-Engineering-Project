@@ -1,0 +1,47 @@
+pipeline:
+  name: movie_data_pipeline
+  owner: data-engineering
+  schedule: "0 * * * *"
+  catchup: false
+  max_active_runs: 1
+
+extract:
+  source: tmdb
+  endpoint: /movie/popular
+  language: en-US
+  incremental_count: 10
+  max_pages: 500
+
+paths:
+  raw: data/raw/new_movies.json
+  staging: data/staging/new_movies.json
+  validated: data/processed/new_movies_validated.json
+  invalid: data/processed/new_movies_invalid.json
+  transformed: data/processed/new_movies_transformed.json
+  kafka_output: data/staging/kafka_movies.json
+  database: database/movies.db
+  reports: analytics/reports
+
+kafka:
+  topic: movie_pipeline
+  group_id: movie-project-consumer
+  idle_timeout_seconds: 10
+  bootstrap_local: localhost:29092
+  bootstrap_docker: kafka:9092
+
+database:
+  engine: sqlite
+  table: movies
+  primary_key: tmdb_id
+
+quality:
+  required_fields:
+    - id
+    - title
+    - overview
+    - release_date
+    - popularity
+    - vote_average
+    - vote_count
+    - original_language
+    - genre_ids
