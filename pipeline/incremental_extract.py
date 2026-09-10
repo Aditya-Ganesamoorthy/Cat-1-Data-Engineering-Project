@@ -202,6 +202,8 @@ def fetch_new_movies(existing_ids):
 
     return new_movies
 
+    
+
 
 def save_movies(movies):
 
